@@ -5,6 +5,7 @@ export interface Staff {
   name: string;
   role: Role;
   totalHours: number;
+  daysOff: string[];
 }
 
 export type ShiftType = 'Morning' | 'Afternoon' | 'Night' | 'OnCall';
@@ -12,8 +13,8 @@ export type DayOfWeek = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
 export type ZoneType = 'Zone A' | 'Zone B' | 'Isolation';
 
 export interface ShiftSlot {
-  id: string; // e.g., 'Mon-Morning-Zone A'
-  day: DayOfWeek;
+  id: string; // e.g., '2026-06-01-Morning-Zone A'
+  date: string; // YYYY-MM-DD
   shift: ShiftType;
   zone: ZoneType;
   staffIds: string[];

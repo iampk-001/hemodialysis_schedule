@@ -1,47 +1,111 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { ScheduleBoard } from './components/ScheduleBoard';
-import { generateEmptyBoard, mockStaffList, initialStaffMap } from './mockData';
-import type { BoardState, Staff } from './types';
+import { generateEmptyBoard, mockStaffList } from './mockData';
+import type { BoardState, Staff, StaffMap } from './types';
 import { StaffCard } from './components/StaffCard';
+import { StaffManagerModal } from './components/StaffManagerModal';
+import { addMonths, subMonths } from 'date-fns';
 
 function App() {
-  const [boardState, setBoardState] = useState<BoardState>(generateEmptyBoard());
+  const [currentDate, setCurrentDate] = useState(new Date('2026-06-01T00:00:00'));
+
+  const [staffList, setStaffList] = useState<Staff[]>(mockStaffList);
+  const staffMap = useMemo(() => {
+    return staffList.reduce((acc, staff) => {
+      acc[staff.id] = staff;
+      return acc;
+    }, {} as StaffMap);
+  }, [staffList]);
+  
+  const [boardState, setBoardState] = useState<BoardState>(generateEmptyBoard(currentDate));
   const [isSimulating, setIsSimulating] = useState(false);
   const [activeStaff, setActiveStaff] = useState<Staff | null>(null);
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
+
+  const handleAddStaff = (newStaff: Omit<Staff, 'id'>) => {
+    const id = `s${Date.now()}`;
+    setStaffList([...staffList, { ...newStaff, id }]);
+  };
+
+  const handleUpdateStaff = (updatedStaff: Staff) => {
+    setStaffList(staffList.map(s => s.id === updatedStaff.id ? updatedStaff : s));
+  };
+
+  const handleDeleteStaff = (id: string) => {
+    setStaffList(staffList.filter(s => s.id !== id));
+    // Also remove them from the board
+    setBoardState(prev => {
+      const newBoard = { ...prev };
+      Object.keys(newBoard).forEach(slotId => {
+        if (newBoard[slotId].staffIds.includes(id)) {
+          newBoard[slotId] = {
+            ...newBoard[slotId],
+            staffIds: newBoard[slotId].staffIds.filter(sId => sId !== id)
+          };
+        }
+      });
+      return newBoard;
+    });
+  };
+
+  const handlePrevMonth = () => {
+    const newDate = subMonths(currentDate, 1);
+    setCurrentDate(newDate);
+    setBoardState(generateEmptyBoard(newDate));
+  };
+
+  const handleNextMonth = () => {
+    const newDate = addMonths(currentDate, 1);
+    setCurrentDate(newDate);
+    setBoardState(generateEmptyBoard(newDate));
+  };
 
   const handleAutoAssign = () => {
     setIsSimulating(true);
-    // Simulate loading for 1.5 seconds
+    
     setTimeout(() => {
-      const newBoard = generateEmptyBoard();
-      const inChargeIds = mockStaffList.filter(s => s.role === 'InChargeRN').map(s => s.id);
-      const rnIds = mockStaffList.filter(s => s.role === 'RN').map(s => s.id);
-      const pnIds = mockStaffList.filter(s => s.role === 'PN_NA').map(s => s.id);
-      const mdIds = mockStaffList.filter(s => s.role === 'Nephrologist').map(s => s.id);
+      const newBoard = generateEmptyBoard(currentDate);
+      const inChargeIds = staffList.filter(s => s.role === 'InChargeRN').map(s => s.id);
+      const rnIds = staffList.filter(s => s.role === 'RN').map(s => s.id);
+      const pnIds = staffList.filter(s => s.role === 'PN_NA').map(s => s.id);
+      const mdIds = staffList.filter(s => s.role === 'Nephrologist').map(s => s.id);
 
       // Super simple mock auto-assign algorithm
       Object.keys(newBoard).forEach((slotId) => {
         const slot = newBoard[slotId];
+        
+        // Filter available staff based on daysOff
+        const availableInCharge = inChargeIds.filter(id => !(staffMap[id]?.daysOff || []).includes(slot.date));
+        const availableRn = rnIds.filter(id => !(staffMap[id]?.daysOff || []).includes(slot.date));
+        const availablePn = pnIds.filter(id => !(staffMap[id]?.daysOff || []).includes(slot.date));
+        const availableMd = mdIds.filter(id => !(staffMap[id]?.daysOff || []).includes(slot.date));
+
         // Assign 1 In-charge to Zone A morning/afternoon randomly to pass/fail skill mix
         if (slot.zone === 'Zone A' && (slot.shift === 'Morning' || slot.shift === 'Afternoon')) {
-          if (Math.random() > 0.2) slot.staffIds.push(inChargeIds[Math.floor(Math.random() * inChargeIds.length)]);
+          if (Math.random() > 0.2 && availableInCharge.length > 0) {
+            slot.staffIds.push(availableInCharge[Math.floor(Math.random() * availableInCharge.length)]);
+          }
         }
         // Assign some RNs
-        slot.staffIds.push(rnIds[Math.floor(Math.random() * rnIds.length)]);
-        if (slot.zone === 'Zone A') {
-          slot.staffIds.push(rnIds[Math.floor(Math.random() * rnIds.length)]);
-          slot.staffIds.push(rnIds[Math.floor(Math.random() * rnIds.length)]); // try to pass ratio
+        if (availableRn.length > 0) {
+          slot.staffIds.push(availableRn[Math.floor(Math.random() * availableRn.length)]);
+        }
+        if (slot.zone === 'Zone A' && availableRn.length > 0) {
+          slot.staffIds.push(availableRn[Math.floor(Math.random() * availableRn.length)]);
+          slot.staffIds.push(availableRn[Math.floor(Math.random() * availableRn.length)]); // try to pass ratio
         }
         // Assign PN
-        if (Math.random() > 0.5) slot.staffIds.push(pnIds[Math.floor(Math.random() * pnIds.length)]);
+        if (Math.random() > 0.5 && availablePn.length > 0) {
+          slot.staffIds.push(availablePn[Math.floor(Math.random() * availablePn.length)]);
+        }
         
         // Random MD for morning shift
-        if (slot.shift === 'Morning' && Math.random() > 0.8) {
-          slot.staffIds.push(mdIds[Math.floor(Math.random() * mdIds.length)]);
+        if (slot.shift === 'Morning' && Math.random() > 0.8 && availableMd.length > 0) {
+          slot.staffIds.push(availableMd[Math.floor(Math.random() * availableMd.length)]);
         }
 
         // Deduplicate
@@ -120,13 +184,29 @@ function App() {
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col h-screen overflow-hidden">
-        <Header onAutoAssign={handleAutoAssign} isSimulating={isSimulating} />
+        <Header 
+          currentDate={currentDate}
+          onPrevMonth={handlePrevMonth}
+          onNextMonth={handleNextMonth}
+          onAutoAssign={handleAutoAssign} 
+          isSimulating={isSimulating} 
+          onManageStaff={() => setIsManagerOpen(true)}
+        />
         
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar staffList={mockStaffList} />
-          <ScheduleBoard boardState={boardState} staffMap={initialStaffMap} />
+          <Sidebar staffList={staffList} />
+          <ScheduleBoard boardState={boardState} staffMap={staffMap} currentDate={currentDate} />
         </div>
       </div>
+
+      <StaffManagerModal
+        isOpen={isManagerOpen}
+        onClose={() => setIsManagerOpen(false)}
+        staffList={staffList}
+        onAddStaff={handleAddStaff}
+        onUpdateStaff={handleUpdateStaff}
+        onDeleteStaff={handleDeleteStaff}
+      />
 
       <DragOverlay>
         {activeStaff ? <StaffCard staff={activeStaff} draggableId="overlay" /> : null}

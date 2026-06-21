@@ -25,8 +25,8 @@ export const ShiftCell: React.FC<ShiftCellProps> = ({ slot, staffMap, boardState
   const staffInSlot = slot.staffIds.map(id => staffMap[id]).filter(Boolean);
 
   // Validate rules
-  const hasSkillMix = checkSkillMix(boardState, slot.day, slot.shift, staffMap);
-  const hasGoodRatio = checkRatio(boardState, slot.day, slot.shift, slot.zone, staffMap);
+  const skillMixOk = checkSkillMix(boardState, slot.date, slot.shift, staffMap);
+  const ratioOk = checkRatio(boardState, slot.date, slot.shift, slot.zone, staffMap);
 
   return (
     <div
@@ -34,16 +34,16 @@ export const ShiftCell: React.FC<ShiftCellProps> = ({ slot, staffMap, boardState
       className={cn(
         "min-h-[100px] border border-gray-200 rounded-md p-2 bg-gray-50 flex flex-col gap-2 transition-colors",
         isOver && "bg-medical-lightBlue border-medical-teal border-dashed border-2",
-        !hasGoodRatio && "bg-red-50 border-red-300"
+        !ratioOk && "bg-red-50 border-red-300"
       )}
     >
       <div className="flex justify-between items-start mb-1">
         <span className="text-xs font-bold text-gray-600">{slot.zone}</span>
         <div className="flex gap-1">
-          {(!hasSkillMix && (slot.shift === 'Morning' || slot.shift === 'Afternoon')) && (
+          {(!skillMixOk && (slot.shift === 'Morning' || slot.shift === 'Afternoon')) && (
             <span title="Missing In-charge RN"><AlertTriangle className="w-4 h-4 text-yellow-500" /></span>
           )}
-          {!hasGoodRatio && (
+          {!ratioOk && (
             <div className="flex items-center text-red-500 text-xs font-bold gap-1" title="พยาบาลไม่พอ (Ratio Alert)">
               <UserX className="w-4 h-4" /> Ratio
             </div>
@@ -57,7 +57,7 @@ export const ShiftCell: React.FC<ShiftCellProps> = ({ slot, staffMap, boardState
             key={`${slot.id}-${staff.id}`} 
             draggableId={`${slot.id}-${staff.id}`}
             staff={staff} 
-            hasFatigueWarning={checkFatigue(staff.id, slot.day, slot.shift, boardState)} 
+            hasFatigueWarning={checkFatigue(staff.id, slot.date, slot.shift, boardState)} 
           />
         ))}
       </div>
