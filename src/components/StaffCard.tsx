@@ -1,6 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 import type { Staff } from '../types';
-import { AlertCircle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -47,7 +47,7 @@ export const StaffCard: React.FC<StaffCardProps> = ({ staff, draggableId, hasFat
       <span className="truncate">{staff.name}</span>
       
       {hasFatigueWarning && (
-        <span title="พักผ่อนไม่พอ (Back-to-back shift)"><AlertCircle className="w-4 h-4 text-red-300 ml-1 animate-pulse" /></span>
+        <span title="พักผ่อนไม่พอ (Back-to-back shift)"><AlertTriangle className="w-4 h-4 text-red-300 ml-1 animate-pulse" /></span>
       )}
       
       <div className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-50">

@@ -78,34 +78,34 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Manage Staff</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded text-gray-500">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 transition-colors">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col transition-colors">
+        <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">Manage Staff</h2>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b bg-gray-50 flex flex-col gap-3">
+        <div className="p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col gap-3">
           <div className="flex gap-2 items-end">
             <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Name</label>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Name</label>
               <input 
                 type="text" 
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="e.g. Dr. Smith" 
-                className="w-full border rounded px-3 py-2 text-sm"
+                className="w-full border dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2 text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
               />
             </div>
             <div className="w-48">
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Role</label>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Role</label>
               <select 
                 value={newRole} 
                 onChange={(e) => setNewRole(e.target.value as Role)}
-                className="w-full border rounded px-3 py-2 text-sm bg-white"
+                className="w-full border dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2 text-sm"
               >
                 <option value="Nephrologist">Nephrologist (แพทย์)</option>
                 <option value="InChargeRN">In-charge RN (พยาบาลหัวหน้า)</option>
@@ -114,17 +114,17 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({
               </select>
             </div>
             <div className="w-48">
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Add Day Off</label>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Add Day Off</label>
               <div className="flex gap-1">
                 <input 
                   type="date"
                   value={newDateInput}
                   onChange={(e) => setNewDateInput(e.target.value)}
-                  className="w-full border rounded px-2 py-2 text-sm bg-white"
+                  className="w-full border dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-2 text-sm"
                 />
                 <button 
                   onClick={() => { addDate(newDateInput, newDaysOff, setNewDaysOff); setNewDateInput(''); }}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 rounded"
+                  className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-2 rounded border dark:border-gray-600"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -150,17 +150,17 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({
 
         <div className="flex-1 overflow-y-auto p-4">
           <table className="w-full text-left text-sm">
-            <thead className="bg-gray-100 sticky top-0 z-10 shadow-sm">
+            <thead className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10 shadow-sm">
               <tr>
-                <th className="p-3 rounded-tl font-semibold text-gray-600">Name</th>
-                <th className="p-3 font-semibold text-gray-600">Role</th>
-                <th className="p-3 font-semibold text-gray-600">Days Off</th>
-                <th className="p-3 rounded-tr text-right font-semibold text-gray-600">Actions</th>
+                <th className="p-3 rounded-tl font-semibold text-gray-600 dark:text-gray-300">Name</th>
+                <th className="p-3 font-semibold text-gray-600 dark:text-gray-300">Role</th>
+                <th className="p-3 font-semibold text-gray-600 dark:text-gray-300">Days Off</th>
+                <th className="p-3 rounded-tr text-right font-semibold text-gray-600 dark:text-gray-300">Actions</th>
               </tr>
             </thead>
             <tbody>
               {staffList.map(staff => (
-                <tr key={staff.id} className="border-b last:border-0 hover:bg-gray-50">
+                <tr key={staff.id} className="border-b dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <td className="p-3">
                     {editingId === staff.id ? (
                       <input 
@@ -168,14 +168,14 @@ export const StaffManagerModal: React.FC<StaffManagerModalProps> = ({
                         type="text" 
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="border rounded px-2 py-1 w-full"
+                        className="border dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1 w-full"
                         onKeyDown={(e) => e.key === 'Enter' && saveEdit(staff)}
                       />
                     ) : (
-                      <span className="font-medium text-gray-800">{staff.name}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200">{staff.name}</span>
                     )}
                   </td>
-                  <td className="p-3 text-gray-600">{staff.role}</td>
+                  <td className="p-3 text-gray-600 dark:text-gray-400">{staff.role}</td>
                   <td className="p-3">
                     {editingId === staff.id ? (
                       <div className="flex flex-col gap-2">

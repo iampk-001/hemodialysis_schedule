@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core';
+import { useState, useMemo, useEffect } from 'react';
+import { DndContext, DragOverlay, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -25,6 +25,21 @@ function App() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [activeStaff, setActiveStaff] = useState<Staff | null>(null);
   const [isManagerOpen, setIsManagerOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('theme') === 'dark' || 
+      (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   const handleAddStaff = (newStaff: Omit<Staff, 'id'>) => {
     const id = `s${Date.now()}`;
@@ -177,13 +192,28 @@ function App() {
     });
   };
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    })
+  );
+
   return (
     <DndContext 
+      sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className={`flex flex-col h-screen overflow-hidden ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-white'}`}>
         <Header 
           currentDate={currentDate}
           onPrevMonth={handlePrevMonth}
@@ -191,10 +221,13 @@ function App() {
           onAutoAssign={handleAutoAssign} 
           isSimulating={isSimulating} 
           onManageStaff={() => setIsManagerOpen(true)}
+          isDarkMode={isDarkMode}
+          toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+          toggleMobileSidebar={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
         />
         
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar staffList={staffList} />
+        <div className="flex flex-1 overflow-hidden relative">
+          <Sidebar staffList={staffList} isOpen={isMobileSidebarOpen} onClose={() => setIsMobileSidebarOpen(false)} />
           <ScheduleBoard boardState={boardState} staffMap={staffMap} currentDate={currentDate} />
         </div>
       </div>

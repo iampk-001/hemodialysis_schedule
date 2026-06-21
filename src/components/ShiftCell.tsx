@@ -32,9 +32,9 @@ export const ShiftCell: React.FC<ShiftCellProps> = ({ slot, staffMap, boardState
     <div
       ref={setNodeRef}
       className={cn(
-        "min-h-[100px] border border-gray-200 rounded-md p-2 bg-gray-50 flex flex-col gap-2 transition-colors",
-        isOver && "bg-medical-lightBlue border-medical-teal border-dashed border-2",
-        !ratioOk && "bg-red-50 border-red-300"
+        "min-h-[100px] border-r border-gray-100 dark:border-gray-700 p-2 flex flex-col gap-2 transition-colors",
+        isOver && "bg-medical-lightBlue dark:bg-medical-blue/20 border-medical-teal border-dashed border-2",
+        !ratioOk && "bg-red-50 dark:bg-red-900/10"
       )}
     >
       <div className="flex justify-between items-start mb-1">
